@@ -257,64 +257,76 @@ class FilesController {
   }
 
   static async putPublish(req, res) {
-    const { id } = req.params;
-    const token = req.header('X-Token');
-    const key = `auth_${token}`;
-    const userId = await redisClient.get(key);
-    // convert id from string to the ObjectID format it usually is in mongodb
-    const userObjId = new ObjectID(userId);
-    const fileId = new ObjectID(id);
-    if (userId) {
-      const fileFilter = {
-        _id: fileId,
-        userId: userObjId,
-      };
-      const filesCollection = dbClient.db.collection('files');
-      const file = await filesCollection.findOne(fileFilter);
-      if (!file) {
-        res.status(404).json({ error: 'Not found' });
-        return;
+    try {
+      const { id } = req.params;
+      const token = req.header('X-Token');
+      const key = `auth_${token}`;
+      const userId = await redisClient.get(key);
+      // convert id from string to the ObjectID format it usually is in mongodb
+      const userObjId = new ObjectID(userId);
+      const fileId = new ObjectID(id);
+      if (userId) {
+        const fileFilter = {
+          _id: fileId,
+          userId: userObjId,
+        };
+        const filesCollection = dbClient.db.collection('files');
+        const file = await filesCollection.findOne(fileFilter);
+        if (!file) {
+          res.status(404).json({ error: 'Not found' });
+          return;
+        }
+        await filesCollection.updateOne(fileFilter, { $set: { isPublic: true } });
+        res.status(200).json({
+          id: file._id,
+          userId: file.userId,
+          name: file.name,
+          type: file.type,
+          isPublic: true,
+          parentId: file.parentId,
+        });
+      } else {
+        res.status(401).json({ error: 'Unauthorized' });
       }
-      await filesCollection.updateOne(fileFilter, { $set: { isPublic: true } });
-      res.status(200).json({
-        id: file._id,
-        userId: file.userId,
-        name: file.name,
-        type: file.type,
-        isPublic: true,
-        parentId: file.parentId,
-      });
+    } catch (err) {
+      console.log(err);
     }
   }
 
   static async putUnPublish(req, res) {
-    const { id } = req.params;
-    const token = req.header('X-Token');
-    const key = `auth_${token}`;
-    const userId = await redisClient.get(key);
-    // convert id from string to the ObjectID format it usually is in mongodb
-    const userObjId = new ObjectID(userId);
-    const fileId = new ObjectID(id);
-    if (userId) {
-      const fileFilter = {
-        _id: fileId,
-        userId: userObjId,
-      };
-      const filesCollection = dbClient.db.collection('files');
-      const file = await filesCollection.findOne(fileFilter);
-      if (!file) {
-        res.status(404).json({ error: 'Not found' });
-        return;
+    try {
+      const { id } = req.params;
+      const token = req.header('X-Token');
+      const key = `auth_${token}`;
+      const userId = await redisClient.get(key);
+      // convert id from string to the ObjectID format it usually is in mongodb
+      const userObjId = new ObjectID(userId);
+      const fileId = new ObjectID(id);
+      if (userId) {
+        const fileFilter = {
+          _id: fileId,
+          userId: userObjId,
+        };
+        const filesCollection = dbClient.db.collection('files');
+        const file = await filesCollection.findOne(fileFilter);
+        if (!file) {
+          res.status(404).json({ error: 'Not found' });
+          return;
+        }
+        await filesCollection.updateOne(fileFilter, { $set: { isPublic: false } });
+        res.status(200).json({
+          id: file._id,
+          userId: file.userId,
+          name: file.name,
+          type: file.type,
+          isPublic: false,
+          parentId: file.parentId,
+        });
+      } else {
+        res.status(401).json({ error: 'Unauthorized' });
       }
-      await filesCollection.updateOne(fileFilter, { $set: { isPublic: false } });
-      res.status(200).json({
-        id: file._id,
-        userId: file.userId,
-        name: file.name,
-        type: file.type,
-        isPublic: false,
-        parentId: file.parentId,
-      });
+    } catch (err) {
+      console.log(err);
     }
   }
 
