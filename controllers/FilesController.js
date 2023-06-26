@@ -30,6 +30,12 @@ class FilesController {
         const { type } = request.body;
         const { data } = request.body;
         const parentId = request.body.parentId || 0;
+        let parentidObject;
+        if (parentId) {
+          parentidObject = new ObjectID(parentId);
+        } else {
+          parentidObject = parentId;
+        }
         const isPublic = request.body.isPublic || false;
         const allowedTypes = ['file', 'folder', 'image'];
         if (!name) {
@@ -47,7 +53,6 @@ class FilesController {
         }
         if (parentId) {
           const filesCollection = dbClient.db.collection('files');
-          const parentidObject = new ObjectID(parentId);
           const existingFileWithParentId = await filesCollection.findOne(
             { _id: parentidObject, userId: existingUser._id },
           );
@@ -68,7 +73,7 @@ class FilesController {
               name,
               type,
               isPublic,
-              parentId,
+              parentId: parentidObject,
             },
           );
           const id = inserted.insertedId;
@@ -79,7 +84,6 @@ class FilesController {
           const filesCollection = dbClient.db.collection('files');
           const folderPath = process.env.FOLDER_PATH || '/tmp/files_manager';
           const uuidstr = uuidv4();
-          const parentidObject = new ObjectID(parentId);
           // file name
           const filePath = `${folderPath}/${uuidstr}`;
           const buff = Buffer.from(data, 'base64').toString();
@@ -186,6 +190,7 @@ class FilesController {
                 userId: existingUser._id,
               },
             );
+            // console.log('getIndex 189', existingUser._id);
             if (!existingParentFolder) {
               response.status(201).send([]);
               return;
@@ -203,6 +208,7 @@ class FilesController {
             const aggCursor = filesCollection.aggregate(pipeline);
             const finalFilesArray = [];
             for await (const file of aggCursor) {
+              // console.log(file);
               const fileobj = {
                 id: file._id,
                 userId: file.userId,
@@ -213,7 +219,6 @@ class FilesController {
               };
               finalFilesArray.push(fileobj);
             }
-
             response.status(201).send(finalFilesArray);
           } else {
             const pipeline = [
