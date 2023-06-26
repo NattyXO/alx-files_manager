@@ -351,7 +351,7 @@ class FilesController {
         return;
       }
       if (file.type === 'folder') {
-        res.status(400).json({ error: 'A folder doesnt\'t have content' });
+        res.status(400).json({ error: 'A folder doesn\'t have content' });
         return;
       }
       let filePath = file.localPath;
