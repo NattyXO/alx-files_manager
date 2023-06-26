@@ -2,6 +2,7 @@ import base64
 import requests
 import sys
 
+print(sys.argv)
 file_path = sys.argv[1]
 file_name = file_path.split('/')[-1]
 

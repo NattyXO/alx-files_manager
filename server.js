@@ -8,5 +8,5 @@ app.use(express.json());
 // sets all the routes created in routes/index
 app.use('/', allRoutes);
 
-app.listen(port);
+app.listen(port, () => console.log(`Server running on port ${port}\n...`));
 module.exports = app;

@@ -20,11 +20,7 @@ class DBClient {
   }
 
   isAlive() {
-    const dbstatus = this.client.on('connected', () => true);
-    if (dbstatus) {
-      return true;
-    }
-    return false;
+    return this.client.isConnected();
   }
 
   async nbUsers() {
