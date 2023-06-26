@@ -192,7 +192,7 @@ class FilesController {
             );
             // console.log('getIndex 189', existingUser._id);
             if (!existingParentFolder) {
-              response.status(201).send([]);
+              response.status(201).json([]);
               return;
             }
 
@@ -219,7 +219,7 @@ class FilesController {
               };
               finalFilesArray.push(fileobj);
             }
-            response.status(201).send(finalFilesArray);
+            response.status(201).json(finalFilesArray);
           } else {
             const pipeline = [
               { $match: { userId: userObjId } },
@@ -243,7 +243,7 @@ class FilesController {
               };
               finalFilesArray.push(fileobj);
             }
-            response.status(201).send(finalFilesArray);
+            response.status(201).json(finalFilesArray);
           }
         } else {
           response.status(401).json({ error: 'Unauthorized' });
