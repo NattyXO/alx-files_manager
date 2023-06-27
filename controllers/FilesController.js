@@ -106,8 +106,13 @@ export default class FilesController {
       parentId: (parentId === ROOT_FOLDER_ID) || (parentId === ROOT_FOLDER_ID.toString())
         ? '0'
         : new mongoDBCore.BSON.ObjectId(parentId),
+<<<<<<< HEAD
     };
     await mkDirAsync(baseDir, { recursive: true });
+=======
+    }; 
+await mkDirAsync(baseDir, { recursive: true });
+>>>>>>> 61e278656e722b7a27f2e513db33153f4d38a2e5
     if (type !== VALID_FILE_TYPES.folder) {
       const localPath = joinPath(baseDir, uuidv4());
       await writeFileAsync(localPath, Buffer.from(base64Data, 'base64'));
