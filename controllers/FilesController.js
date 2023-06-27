@@ -126,134 +126,108 @@ class FilesController {
   }
 
   static async getShow(request, response) {
-    try {
-      const fileId = request.params.id;
-      // convert id from string to the ObjectID format it usually is in mongodb
-      const fileObjId = new ObjectID(fileId);
-      const token = request.header('X-Token');
-      const key = `auth_${token}`;
-      const userId = await redisClient.get(key);
-      // convert id from string to the ObjectID format it usually is in mongodb
-      const userObjId = new ObjectID(userId);
-      if (userId) {
-        const users = dbClient.db.collection('users');
-        const existingUser = await users.findOne({ _id: userObjId });
-        if (existingUser) {
-          const files = dbClient.db.collection('files');
-          const requestedFile = await files.findOne({ _id: fileObjId });
-          if (!requestedFile) {
-            response.status(404).json({ error: 'Not found' });
-            return;
-          }
-          response.status(200).json(
-            {
-              id: requestedFile._id,
-              userId: requestedFile.userId,
-              name: requestedFile.name,
-              type: requestedFile.type,
-              isPublic: requestedFile.isPublic,
-              parentId: requestedFile.parentId,
-            },
-          );
-        } else {
-          response.status(401).json({ error: 'Unauthorized' });
+   try {
+    const fileId = request.params.id;
+    // convert id from string to the ObjectID format it usually is in mongodb
+    const fileObjId = new ObjectID(fileId);
+    const token = request.header('X-Token');
+    const key = `auth_${token}`;
+    const userId = await redisClient.get(key);
+    // convert id from string to the ObjectID format it usually is in mongodb
+    const userObjId = new ObjectID(userId);
+    if (userId) {
+      const users = dbClient.db.collection('users');
+      const existingUser = await users.findOne({ _id: userObjId });
+      if (existingUser) {
+        const files = dbClient.db.collection('files');
+        const requestedFile = await files.findOne({ _id: fileObjId });
+        if (!requestedFile) {
+          response.status(404).json({ error: 'Not found' });
+          return;
         }
+        response.status(200).json(
+          {
+            id: requestedFile._id,
+            userId: requestedFile.userId,
+            name: requestedFile.name,
+            type: requestedFile.type,
+            isPublic: requestedFile.isPublic,
+            parentId: requestedFile.parentId,
+          },
+        );
       } else {
         response.status(401).json({ error: 'Unauthorized' });
       }
-    } catch (err) {
-      console.log(err);
+    } else {
+      response.status(401).json({ error: 'Unauthorized' });
     }
+  } catch (err) {
+    console.log(err);
+  }
   }
 
   static async getIndex(request, response) {
-    try {
-      // convert id from string to the ObjectID format it usually is in mongodb
-      const { parentId } = request.query;
-      const page = parseInt(request.query.page, 10) || 0;
-      const token = request.header('X-Token');
-      const key = `auth_${token}`;
-      const userId = await redisClient.get(key);
-      // convert id from string to the ObjectID format it usually is in mongodb
-      const userObjId = new ObjectID(userId);
-      if (userId) {
-        const users = dbClient.db.collection('users');
-        const filesCollection = dbClient.db.collection('files');
-        const existingUser = await users.findOne({ _id: userObjId });
-        if (existingUser) {
-          if (parentId) {
-            const parentObjId = new ObjectID(parentId);
-            // if parentId is set and does not exist, return empty list.
-            const existingParentFolder = await filesCollection.findOne(
-              {
-                _id: parentObjId,
-                userId: existingUser._id,
-              },
-            );
-            // console.log('getIndex 189', existingUser._id);
-            if (!existingParentFolder) {
-              response.status(201).json([]);
-              return;
-            }
-
-            const pipeline = [
-              { $match: { userId: userObjId, parentId: parentObjId } },
-              { $sort: { _id: 1 } },
-              // skin page amount * 20
-              { $skip: page * 20 },
-              // Limit to 20 documents per page
-              { $limit: 20 },
-            ];
-
-            const aggCursor = filesCollection.aggregate(pipeline);
-            const finalFilesArray = [];
-            for await (const file of aggCursor) {
-              // console.log(file);
-              const fileobj = {
-                id: file._id,
-                userId: file.userId,
-                name: file.name,
-                type: file.type,
-                isPublic: file.isPublic,
-                parentId: file.parentId,
-              };
-              finalFilesArray.push(fileobj);
-            }
-            response.status(201).json(finalFilesArray);
-          } else {
-            const pipeline = [
-              { $match: { userId: userObjId } },
-              { $sort: { _id: 1 } },
-              // skin page * 20 amount of returns
-              { $skip: page * 20 },
-              // Limit to 20 documents
-              { $limit: 20 },
-            ];
-
-            const aggCursor = filesCollection.aggregate(pipeline);
-            const finalFilesArray = [];
-            for await (const file of aggCursor) {
-              const fileobj = {
-                id: file._id,
-                userId: file.userId,
-                name: file.name,
-                type: file.type,
-                isPublic: file.isPublic,
-                parentId: file.parentId,
-              };
-              finalFilesArray.push(fileobj);
-            }
-            response.status(201).json(finalFilesArray);
+try {
+    // convert id from string to the ObjectID format it usually is in mongodb
+    const { parentId } = request.query;
+    const page = parseInt(request.query.page, 10) || 0;
+    const token = request.header('X-Token');
+    const key = `auth_${token}`;
+    const userId = await redisClient.get(key);
+    // convert id from string to the ObjectID format it usually is in mongodb
+    const userObjId = new ObjectID(userId);
+    if (userId) {
+      const users = dbClient.db.collection('users');
+      const filesCollection = dbClient.db.collection('files');
+      const existingUser = await users.findOne({ _id: userObjId });
+      if (existingUser) {
+        if (parentId) {
+          const parentObjId = new ObjectID(parentId);
+          // if parentId is set and does not exist, return empty list.
+          const existingParentFolder = await filesCollection.findOne(
+            {
+              _id: parentObjId,
+              userId: existingUser._id,
+            },
+          );
+          if (!existingParentFolder) {
+            response.status(404).json({ error: 'Not found' });
+            return;
           }
+          // get all files that belong to the parent folder
+          const files = await filesCollection.find(
+            {
+              parentId: parentObjId,
+              userId: existingUser._id,
+            },
+            {
+              limit: 20,
+              skip: page * 20,
+            },
+          );
+          response.status(200).json(files);
         } else {
-          response.status(401).json({ error: 'Unauthorized' });
+          // get all files for the current user
+          const files = await filesCollection.find(
+            {
+              userId: existingUser._id,
+            },
+            {
+              limit: 20,
+              skip: page * 20,
+            },
+          );
+          response.status(200).json(files);
         }
       } else {
         response.status(401).json({ error: 'Unauthorized' });
       }
-    } catch (err) {
-      console.log(err);
+    } else {
+      response.status(401).json({ error: 'Unauthorized' });
     }
+  } catch (err) {
+    console.log(err);
+  }
   }
 
   static async putPublish(req, res) {
