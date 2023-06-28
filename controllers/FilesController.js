@@ -104,43 +104,31 @@ class FilesController {
    * parameter, return an error Not found with a status code 404
    * Otherwise, return the file document
    */
- static async getShow(request, response) {
-  // Retrieve the user based on the token
-  const { userId } = await userUtils.getUserIdAndKey(request);
+  static async getShow(request, response) {
+    const fileId = request.params.id;
 
-  if (!basicUtils.isValidId(userId)) {
-    return response.status(401).send({ error: 'Unauthorized' });
+    const { userId } = await userUtils.getUserIdAndKey(request);
+
+    const user = await userUtils.getUser({
+      _id: ObjectId(userId),
+    });
+
+    if (!user) return response.status(401).send({ error: 'Unauthorized' });
+
+    // Mongo Condition for Id
+    if (!basicUtils.isValidId(fileId) || !basicUtils.isValidId(userId)) { return response.status(404).send({ error: 'Not found' }); }
+
+    const result = await fileUtils.getFile({
+      _id: ObjectId(fileId),
+      userId: ObjectId(userId),
+    });
+
+    if (!result) return response.status(404).send({ error: 'Not found' });
+
+    const file = fileUtils.processFile(result);
+
+    return response.status(200).send(file);
   }
-
-  // Retrieve the file based on the ID
-  const fileId = request.params.id;
-  const file = await fileUtils.getFileById(fileId);
-
-  if (!file || !fileUtils.isOwnerAndPublic(file, userId)) {
-    return response.status(404).send({ error: 'Not found' });
-  }
-
-  return response.status(200).send(file);
-}
-
-static async getIndex(request, response) {
-  // Retrieve the user based on the token
-  const { userId } = await userUtils.getUserIdAndKey(request);
-
-  if (!basicUtils.isValidId(userId)) {
-    return response.status(401).send({ error: 'Unauthorized' });
-  }
-
-  // Retrieve the parentId and page from query parameters
-  let { parentId, page } = request.query;
-  parentId = parentId || '0';
-  page = parseInt(page) || 0;
-
-  // Get the files for the specified parentId with pagination
-  const fileList = await fileUtils.getFilesByParentId(userId, parentId, page);
-
-  return response.status(200).send(fileList);
-}
 
   /**
    * should retrieve all users file documents for a specific
